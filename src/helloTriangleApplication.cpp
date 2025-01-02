@@ -35,11 +35,15 @@ void HelloTriangeApplication::initVulkan()
 
 void HelloTriangeApplication::createInstance()
 {
-    auto availExtensions = enumerateExtensions();
-    uint32_t glfwExtensionCount{0};
-    auto **glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+    if (enableValidationLayers && !isValidationLayerSupported())
+    {
+        throw std::runtime_error("Error: validation layers requested, but not available!");
+    }
 
-    if (!isInVkExtensions(glfwExtensionCount, glfwExtensions, std::move(availExtensions)))
+    auto availExtensions = enumerateExtensions();
+    auto glfwExtensions = enumerateGlfwExtensions();
+
+    if (!isInVkExtensions(glfwExtensions, std::move(availExtensions)))
     {
         throw std::runtime_error("Error: Some of the glfw extensions are not supported by vulkan");
     }
@@ -47,7 +51,6 @@ void HelloTriangeApplication::createInstance()
     APP_INFO("Vulkan support all of GLFW extensions");
 
     VkApplicationInfo info{};
-
     info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
     info.pApplicationName = "Hello Triangle";
     info.applicationVersion = VK_MAKE_API_VERSION(0, 1, 0, 0);
@@ -56,13 +59,21 @@ void HelloTriangeApplication::createInstance()
     info.apiVersion = VK_API_VERSION_1_0;
 
     VkInstanceCreateInfo createInfo{};
-
     createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     createInfo.pApplicationInfo = &info;
 
-    createInfo.enabledExtensionCount = glfwExtensionCount;
-    createInfo.ppEnabledExtensionNames = glfwExtensions;
-    createInfo.enabledLayerCount = 0;
+    createInfo.enabledExtensionCount = glfwExtensions.size();
+    createInfo.ppEnabledExtensionNames = glfwExtensions.data();
+
+    if (enableValidationLayers)
+    {
+        createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
+        createInfo.ppEnabledLayerNames = validationLayers.data();
+    }
+    else
+    {
+        createInfo.enabledLayerCount = 0;
+    }
 
     if (vkCreateInstance(&createInfo, nullptr, &m_vk_instance) != VK_SUCCESS)
     {
@@ -99,27 +110,98 @@ std::vector<VkExtensionProperties> HelloTriangeApplication::enumerateExtensions(
     return extensions;
 }
 
-bool HelloTriangeApplication::isInVkExtensions(uint32_t count, const char **names, std::vector<VkExtensionProperties> extensions)
+bool HelloTriangeApplication::isInVkExtensions(const std::vector<const char *> &glfwExtensions, std::vector<VkExtensionProperties> vkExtensions)
 {
-    for (uint32_t i = 0; i < count; i++)
+    for (const auto &glfwExtension : glfwExtensions)
     {
-        auto *currName = names[i];
-        if (std::find_if(extensions.begin(), extensions.end(), [&currName](const VkExtensionProperties &prop)
-                         { return std::strcmp(prop.extensionName, currName) == 0; }) == extensions.end())
+        bool isFound{false};
+
+        for (const auto &vkExtension : vkExtensions)
         {
-            return false;
+            if (std::strcmp(vkExtension.extensionName, glfwExtension) == 0)
+            {
+                isFound = true;
+                break;
+            }
         }
+
+        if (!isFound)
+            return false;
     }
 
     return true;
+}
+
+std::vector<VkLayerProperties> HelloTriangeApplication::enumerateLayers()
+{
+    uint32_t layersCount{0};
+    vkEnumerateInstanceLayerProperties(&layersCount, nullptr);
+    std::vector<VkLayerProperties> layers(layersCount);
+    std::stringstream ss;
+
+    vkEnumerateInstanceLayerProperties(&layersCount, layers.data());
+
+    ss << "\nSupported layers:\n";
+    for (const auto &l : layers)
+    {
+        ss << "\t" << l.layerName << ":v" << l.specVersion << '\n';
+    }
+
+    APP_INFO(ss.str());
+
+    vkEnumerateInstanceLayerProperties(&layersCount, layers.data());
+    return layers;
+}
+
+bool HelloTriangeApplication::isValidationLayerSupported()
+{
+    auto layers = enumerateLayers();
+
+    for (const auto &requiredLayer : validationLayers)
+    {
+        bool isLayerFound{false};
+
+        for (const auto &layer : layers)
+        {
+            if (std::strcmp(layer.layerName, requiredLayer) == 0)
+            {
+                isLayerFound = true;
+                break;
+            }
+        }
+
+        if (!isLayerFound)
+            return false;
+    }
+
+    return true;
+}
+
+std::vector<const char *> HelloTriangeApplication::enumerateGlfwExtensions()
+{
+    uint32_t count{0};
+    const auto **extensions = glfwGetRequiredInstanceExtensions(&count);
+    std::stringstream ss;
+
+    ss << "\nSupported glfw extensions:\n";
+    for (std::size_t i{0}; i < count; i++)
+    {
+        ss << '\t' << extensions[i] << '\n';
+    }
+
+    APP_INFO(ss.str());
+
+    return std::vector<const char *>(extensions, extensions + count);
 }
 
 HelloTriangeApplication::~HelloTriangeApplication()
 {
     APP_INFO("Destroying VkInstance");
     vkDestroyInstance(m_vk_instance, nullptr);
+
     APP_INFO("Destroying GLFWwindow");
     glfwDestroyWindow(m_window);
+
     APP_INFO("Termination GLFW");
     glfwTerminate();
 }
