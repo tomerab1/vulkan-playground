@@ -35,10 +35,10 @@ constexpr auto dbglog_info = [](auto &&msg)
 
 constexpr auto dbglog_warn = [](auto &&msg)
 {
-    logStub("INFO", GET_FILENAME, __LINE__, std::forward<decltype(msg)>(msg));
+    logStub("WARN", GET_FILENAME, __LINE__, std::forward<decltype(msg)>(msg));
 };
 
 constexpr auto dbglog_error = [](auto &&msg)
 {
-    logStub("INFO", GET_FILENAME, __LINE__, std::forward<decltype(msg)>(msg));
+    logStub("ERROR", GET_FILENAME, __LINE__, std::forward<decltype(msg)>(msg));
 };
