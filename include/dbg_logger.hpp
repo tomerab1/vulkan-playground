@@ -12,12 +12,13 @@ static constexpr const char *GREEN = "\033[1m\033[32m";
 static constexpr const char *YELLOW = "\033[1m\033[33m";
 static constexpr const char *RED = "\033[1m\033[31m";
 
-constexpr auto getFileName = [](const char *fName)
+inline const char* getFileName(const char *fName)
 {
-    return strrchr(fName, '/') ? strrchr(fName, '/') + 1 : fName;
+    return strrchr(fName, '/') ? strrchr(fName, '/') + 1 : 
+           strrchr(fName, '\\') ? strrchr(fName, '\\') + 1 : fName;
 };
 
-constexpr auto getTimestamp = []()
+inline std::string getTimestamp()
 {
     auto now = std::chrono::system_clock::now();
     auto time = std::chrono::system_clock::to_time_t(now);
