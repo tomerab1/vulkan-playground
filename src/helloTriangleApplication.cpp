@@ -104,6 +104,10 @@ void HelloTriangeApplication::pickPhysicalDevice()
 
     if (candidates.rbegin()->first > 0)
     {
+        VkPhysicalDeviceProperties props;
+        vkGetPhysicalDeviceProperties(candidates.rbegin()->second, &props);
+
+        dbglog_info("Found device {} with score={}", props.deviceName, candidates.rbegin()->first);
         m_phyDevice = candidates.rbegin()->second;
     }
     else
@@ -114,9 +118,25 @@ void HelloTriangeApplication::pickPhysicalDevice()
 
 int HelloTriangeApplication::ratePhysicalDevice(const VkPhysicalDevice &device)
 {
+    int score{0};
     VkPhysicalDeviceProperties props;
     VkPhysicalDeviceFeatures features;
-    return 10;
+
+    vkGetPhysicalDeviceProperties(device, &props);
+    vkGetPhysicalDeviceFeatures(device, &features);
+
+    if (props.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU)
+    {
+        score += 1000;
+    }
+
+    score += props.limits.maxImageDimension2D;
+    if (!features.geometryShader)
+    {
+        score = 0;
+    }
+
+    return score;
 }
 
 void HelloTriangeApplication::mainLoop()

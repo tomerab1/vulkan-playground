@@ -16,6 +16,10 @@ int main()
         dbglog_error("{}", e.what());
         return EXIT_FAILURE;
     }
+    catch (...)
+    {
+        dbglog_error("{}", "An unknown error as occurred");
+    }
 
     return EXIT_SUCCESS;
 }

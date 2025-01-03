@@ -4,6 +4,12 @@
 #include <GLFW/glfw3.h>
 #include <vector>
 #include <array>
+#include <optional>
+
+struct QueueFamilyIndices
+{
+    std::optional<uint32_t> graphcsFamily;
+};
 
 class HelloTriangeApplication
 {
