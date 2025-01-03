@@ -31,6 +31,7 @@ void HelloTriangeApplication::initWindow()
 void HelloTriangeApplication::initVulkan()
 {
     createInstance();
+    pickPhysicalDevice();
 }
 
 void HelloTriangeApplication::createInstance()
@@ -48,7 +49,7 @@ void HelloTriangeApplication::createInstance()
         throw std::runtime_error("Error: Some of the glfw extensions are not supported by vulkan");
     }
 
-    dbglog_info("Vulkan support all of GLFW extensions");
+    dbglog_info("{}", "Vulkan support all of GLFW extensions");
 
     VkApplicationInfo info{};
     info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -80,7 +81,17 @@ void HelloTriangeApplication::createInstance()
         throw std::runtime_error("Error: Failed to create VkInstance");
     }
 
-    dbglog_info("VkInstance created successfuly");
+    dbglog_info("{}", "VkInstance created successfuly");
+}
+
+void HelloTriangeApplication::pickPhysicalDevice()
+{
+    const auto devices = enumeratePhysicalDevices();
+
+    if (devices.size() == 0)
+    {
+        throw std::runtime_error("Error: Failed to find GPUs with Vulkan support");
+    }
 }
 
 void HelloTriangeApplication::mainLoop()
@@ -106,7 +117,7 @@ std::vector<VkExtensionProperties> HelloTriangeApplication::enumerateExtensions(
         ss << "\t" << ex.extensionName << ":v" << ex.specVersion << '\n';
     }
 
-    dbglog_info(ss.str());
+    dbglog_info("{}", ss.str());
     return extensions;
 }
 
@@ -147,7 +158,7 @@ std::vector<VkLayerProperties> HelloTriangeApplication::enumerateLayers()
         ss << "\t" << l.layerName << ":v" << l.specVersion << '\n';
     }
 
-    dbglog_info(ss.str());
+    dbglog_info("{}", ss.str());
 
     vkEnumerateInstanceLayerProperties(&layersCount, layers.data());
     return layers;
@@ -189,19 +200,64 @@ std::vector<const char *> HelloTriangeApplication::enumerateGlfwExtensions()
         ss << '\t' << extensions[i] << '\n';
     }
 
-    dbglog_info(ss.str());
+    dbglog_info("{}", ss.str());
 
     return std::vector<const char *>(extensions, extensions + count);
 }
 
+std::vector<VkPhysicalDevice> HelloTriangeApplication::enumeratePhysicalDevices()
+{
+    uint32_t deviceCount{0};
+    vkEnumeratePhysicalDevices(m_vk_instance, &deviceCount, nullptr);
+
+    std::vector<VkPhysicalDevice> devices(deviceCount);
+    vkEnumeratePhysicalDevices(m_vk_instance, &deviceCount, devices.data());
+
+    std::stringstream ss;
+
+    ss << "\nAvailable physical devices:\n";
+    VkPhysicalDeviceProperties props;
+    for (const auto &dev : devices)
+    {
+        vkGetPhysicalDeviceProperties(dev, &props);
+        ss << "\t" << props.deviceName << '\n';
+    }
+
+    dbglog_info("{}", ss.str());
+
+    return devices;
+}
+
+bool HelloTriangeApplication::isDeviceSuitable(const VkPhysicalDevice &device)
+{
+    return true;
+}
+
+void HelloTriangeApplication::pickBestPhysicalDevice(const std::vector<VkPhysicalDevice> &devices)
+{
+    for (const auto &device : devices)
+    {
+        if (isDeviceSuitable(device))
+        {
+            m_phyDevice = device;
+            break;
+        }
+    }
+
+    if (m_phyDevice == VK_NULL_HANDLE)
+    {
+        throw std::runtime_error("Error: Failed to find a suitable GPU");
+    }
+}
+
 HelloTriangeApplication::~HelloTriangeApplication()
 {
-    dbglog_info("Destroying VkInstance");
+    dbglog_info("{}", "Destroying VkInstance");
     vkDestroyInstance(m_vk_instance, nullptr);
 
-    dbglog_info("Destroying GLFWwindow");
+    dbglog_info("{}", "Destroying GLFWwindow");
     glfwDestroyWindow(m_window);
 
-    dbglog_info("Termination GLFW");
+    dbglog_info("{}", "Termination GLFW");
     glfwTerminate();
 }

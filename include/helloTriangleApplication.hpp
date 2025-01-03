@@ -20,6 +20,7 @@ private:
     void initWindow();
     void initVulkan();
     void createInstance();
+    void pickPhysicalDevice();
     void mainLoop();
 
     std::vector<VkExtensionProperties> enumerateExtensions();
@@ -30,9 +31,14 @@ private:
 
     std::vector<const char *> enumerateGlfwExtensions();
 
+    std::vector<VkPhysicalDevice> enumeratePhysicalDevices();
+    bool isDeviceSuitable(const VkPhysicalDevice &device);
+    void pickBestPhysicalDevice(const std::vector<VkPhysicalDevice> &devices);
+
 private:
     GLFWwindow *m_window;
     VkInstance m_vk_instance;
+    VkPhysicalDevice m_phyDevice{VK_NULL_HANDLE};
 
 #ifdef NDEBUG
     const bool enableValidationLayers{false};

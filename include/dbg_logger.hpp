@@ -26,29 +26,33 @@ constexpr auto getTimestamp = []()
     return os.str();
 };
 
-template <typename T>
-void logStub(const char *lvl, const char *fName, uint32_t fLine, T &&msg)
+template <typename... Args>
+void logStub(const char *lvl, const char *color, const char *fName, uint32_t fLine, const char *fmt, Args &&...msg)
 {
 #ifndef NDEBUG
-    fmt::println("[{}] [{}{}{}] [{}:{}]: {}", getTimestamp(), GREEN, lvl, RESET, fName, fLine, msg);
+    fmt::print("[{}] [{}{}{}] [{}:{}]: ", getTimestamp(), color, lvl, RESET, fName, fLine);
+    fmt::println(fmt, std::forward<Args>(msg)...);
 #endif
 }
 
-constexpr auto dbglog_info = [](auto &&msg, const char *fName)
+template <typename... Args>
+inline void dbglog_info(const char *fName, uint32_t line, const char *fmt, Args &&...msg)
 {
-    logStub("INFO", getFileName(fName), __LINE__, std::forward<decltype(msg)>(msg));
-};
+    logStub("INFO", GREEN, getFileName(fName), line, fmt, std::forward<Args>(msg)...);
+}
 
-constexpr auto dbglog_warn = [](auto &&msg, const char *fName)
+template <typename... Args>
+inline void dbglog_warn(const char *fName, uint32_t line, const char *fmt, Args &&...msg)
 {
-    logStub("WARN", getFileName(fName), __LINE__, std::forward<decltype(msg)>(msg));
-};
+    logStub("WARN", YELLOW, getFileName(fName), line, fmt, std::forward<Args>(msg)...);
+}
 
-constexpr auto dbglog_error = [](auto &&msg, const char *fName)
+template <typename... Args>
+inline void dbglog_error(const char *fName, uint32_t line, const char *fmt, Args &&...msg)
 {
-    logStub("ERROR", getFileName(fName), __LINE__, std::forward<decltype(msg)>(msg));
-};
+    logStub("ERROR", RED, getFileName(fName), line, fmt, std::forward<Args>(msg)...);
+}
 
-#define dbglog_info(msg) dbglog_info(msg, __FILE__)
-#define dbglog_warn(msg) dbglog_warn(msg, __FILE__)
-#define dbglog_error(msg) dbglog_error(msg, __FILE__)
+#define dbglog_info(fmt, ...) dbglog_info(__FILE__, __LINE__, fmt, __VA_ARGS__)
+#define dbglog_warn(fmt, ...) dbglog_warn(__FILE__, __LINE__, fmt, __VA_ARGS__)
+#define dbglog_error(fmt, ...) dbglog_error(__FILE__, __LINE__, fmt, __VA_ARGS__)

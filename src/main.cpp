@@ -13,7 +13,7 @@ int main()
     }
     catch (const std::exception &e)
     {
-        dbglog_error(e.what());
+        dbglog_error("{}", e.what());
         return EXIT_FAILURE;
     }
 
