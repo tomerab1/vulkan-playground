@@ -1,7 +1,6 @@
 #include "helloTriangleApplication.hpp"
-#include "logging.hpp"
+#include "dbg_logger.hpp"
 
-#include <fmt/format.h>
 #include <cstdlib>
 
 int main()
@@ -14,7 +13,7 @@ int main()
     }
     catch (const std::exception &e)
     {
-        APP_ERROR(e.what());
+        dbglog_error(e.what());
         return EXIT_FAILURE;
     }
 

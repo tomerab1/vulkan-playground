@@ -1,6 +1,6 @@
 #include "helloTriangleApplication.hpp"
 
-#include "logging.hpp"
+#include "dbg_logger.hpp"
 
 #include <sstream>
 #include <fmt/format.h>
@@ -48,7 +48,7 @@ void HelloTriangeApplication::createInstance()
         throw std::runtime_error("Error: Some of the glfw extensions are not supported by vulkan");
     }
 
-    APP_INFO("Vulkan support all of GLFW extensions");
+    dbglog_info("Vulkan support all of GLFW extensions");
 
     VkApplicationInfo info{};
     info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -80,7 +80,7 @@ void HelloTriangeApplication::createInstance()
         throw std::runtime_error("Error: Failed to create VkInstance");
     }
 
-    APP_INFO("VkInstance created successfuly");
+    dbglog_info("VkInstance created successfuly");
 }
 
 void HelloTriangeApplication::mainLoop()
@@ -106,7 +106,7 @@ std::vector<VkExtensionProperties> HelloTriangeApplication::enumerateExtensions(
         ss << "\t" << ex.extensionName << ":v" << ex.specVersion << '\n';
     }
 
-    APP_INFO(ss.str());
+    dbglog_info(ss.str());
     return extensions;
 }
 
@@ -147,7 +147,7 @@ std::vector<VkLayerProperties> HelloTriangeApplication::enumerateLayers()
         ss << "\t" << l.layerName << ":v" << l.specVersion << '\n';
     }
 
-    APP_INFO(ss.str());
+    dbglog_info(ss.str());
 
     vkEnumerateInstanceLayerProperties(&layersCount, layers.data());
     return layers;
@@ -189,19 +189,19 @@ std::vector<const char *> HelloTriangeApplication::enumerateGlfwExtensions()
         ss << '\t' << extensions[i] << '\n';
     }
 
-    APP_INFO(ss.str());
+    dbglog_info(ss.str());
 
     return std::vector<const char *>(extensions, extensions + count);
 }
 
 HelloTriangeApplication::~HelloTriangeApplication()
 {
-    APP_INFO("Destroying VkInstance");
+    dbglog_info("Destroying VkInstance");
     vkDestroyInstance(m_vk_instance, nullptr);
 
-    APP_INFO("Destroying GLFWwindow");
+    dbglog_info("Destroying GLFWwindow");
     glfwDestroyWindow(m_window);
 
-    APP_INFO("Termination GLFW");
+    dbglog_info("Termination GLFW");
     glfwTerminate();
 }
