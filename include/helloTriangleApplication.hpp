@@ -34,6 +34,7 @@ private:
     std::vector<VkPhysicalDevice> enumeratePhysicalDevices();
     bool isDeviceSuitable(const VkPhysicalDevice &device);
     void pickBestPhysicalDevice(const std::vector<VkPhysicalDevice> &devices);
+    int ratePhysicalDevice(const VkPhysicalDevice &device);
 
 private:
     GLFWwindow *m_window;

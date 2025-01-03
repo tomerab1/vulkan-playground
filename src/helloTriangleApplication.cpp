@@ -5,6 +5,7 @@
 #include <sstream>
 #include <fmt/format.h>
 #include <stdexcept>
+#include <map>
 #include <algorithm>
 
 void HelloTriangeApplication::run()
@@ -92,6 +93,30 @@ void HelloTriangeApplication::pickPhysicalDevice()
     {
         throw std::runtime_error("Error: Failed to find GPUs with Vulkan support");
     }
+
+    std::multimap<int, VkPhysicalDevice> candidates;
+
+    for (const auto &device : devices)
+    {
+        auto score = ratePhysicalDevice(device);
+        candidates.insert(std::make_pair(score, device));
+    }
+
+    if (candidates.rbegin()->first > 0)
+    {
+        m_phyDevice = candidates.rbegin()->second;
+    }
+    else
+    {
+        throw std::runtime_error("Error: Failed to find a suitable GPU");
+    }
+}
+
+int HelloTriangeApplication::ratePhysicalDevice(const VkPhysicalDevice &device)
+{
+    VkPhysicalDeviceProperties props;
+    VkPhysicalDeviceFeatures features;
+    return 10;
 }
 
 void HelloTriangeApplication::mainLoop()
