@@ -3,6 +3,8 @@
 #include <fmt/format.h>
 #include <string.h>
 #include <chrono>
+#include <sstream>
+#include <iomanip>
 #include <ctime>
 
 static constexpr const char *RESET = "\033[1m\033[0m";
@@ -12,12 +14,12 @@ static constexpr const char *RED = "\033[1m\033[31m";
 
 #define GET_FILENAME (strrchr(__FILE__, '/') ? strrchr(__FILE__, '/') + 1 : __FILE__)
 
-#define GET_TIMESTAMP []() {                                                 \
-    auto now = std::chrono::system_clock::now();                             \
-    auto time = std::chrono::system_clock::to_time_t(now);                   \
-    char buffer[20];                                                         \
-    strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", localtime(&time)); \
-    return std::string(buffer);                                              \
+#define GET_TIMESTAMP []() {                                         \
+    auto now = std::chrono::system_clock::now();                     \
+    auto time = std::chrono::system_clock::to_time_t(now);           \
+    std::ostringstream os;                                           \
+    os << std::put_time(std::localtime(&time), "%Y-%m-%d %H:%M:%S"); \
+    return os.str();                                                 \
 }()
 
 template <typename T>
